@@ -21,7 +21,7 @@
   "main": "./out/extension.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/npm/cli.git"
+    "url": "git+https://github.com/Axl47/FastCommit.git"
   },
   "contributes": {
     "commands": [
