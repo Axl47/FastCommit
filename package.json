@@ -3,7 +3,7 @@
   "displayName": "FastCommit",
   "description": "AI-powered commit message generator for VS Code",
   "version": "1.0.0",
-  "publisher": "fastcommit",
+  "publisher": "axorai",
   "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
