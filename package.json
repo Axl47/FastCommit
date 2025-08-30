@@ -23,6 +23,7 @@
     "type": "git",
     "url": "git+https://github.com/Axl47/FastCommit.git"
   },
+  "activationEvents": [],
   "contributes": {
     "commands": [
       {
