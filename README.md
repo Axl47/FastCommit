@@ -26,16 +26,16 @@ AI-powered commit message generator for VS Code that creates conventional commit
 ## Supported AI Providers
 
 ### OpenAI
-- Models: GPT-4, GPT-3.5-turbo, and other chat models
+- Models: GPT-5, GPT-5-mini, and other chat models
 - Get API key: [OpenAI Platform](https://platform.openai.com/api-keys)
 
 ### Anthropic
-- Models: Claude 3 Sonnet, Claude 3 Haiku, and other Claude models
+- Models: Claude 4 Sonnet, Claude 4 Opus, and other Claude models
 - Get API key: [Anthropic Console](https://console.anthropic.com/)
 
 ### OpenRouter
 - Access to multiple AI providers through one API
-- Models: Claude, GPT, Llama, and many others
+- Models: Claude, GPT, Qwen, and many others
 - Get API key: [OpenRouter](https://openrouter.ai/keys)
 
 ## Configuration
@@ -59,9 +59,9 @@ API keys are stored securely in VS Code's secret storage:
 QuickCommit: Configure API Key
 ```
 
-### Example .quickcommitignore
+### Example .gitignore
 
-Create a `.quickcommitignore` file in your project root to exclude specific files:
+Create a `.gitignore` file in your project root to exclude specific files:
 
 ```
 # Ignore build artifacts

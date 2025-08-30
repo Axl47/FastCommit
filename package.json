@@ -1,0 +1,106 @@
+{
+  "name": "quickcommit",
+  "displayName": "QuickCommit",
+  "description": "AI-powered commit message generator for VS Code",
+  "version": "1.0.2",
+  "publisher": "quickcommit",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "conventional-commits",
+    "commit-message"
+  ],
+  "activationEvents": [
+    "onCommand:quickcommit.generateMessage"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "quickcommit.generateMessage",
+        "title": "Generate Commit Message",
+        "category": "QuickCommit",
+        "icon": "$(git-commit)"
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "quickcommit.generateMessage",
+          "when": "scmProvider == git",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "quickcommit.generateMessage",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "QuickCommit",
+      "properties": {
+        "quickcommit.apiProvider": {
+          "type": "string",
+          "default": "openai",
+          "enum": ["openai", "anthropic", "openrouter"],
+          "enumDescriptions": [
+            "OpenAI (GPT models)",
+            "Anthropic (Claude models)",
+            "OpenRouter (Multiple providers)"
+          ],
+          "description": "AI provider for commit message generation"
+        },
+        "quickcommit.model": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "Model to use for commit message generation"
+        },
+        "quickcommit.customTemplate": {
+          "type": "string",
+          "default": "",
+          "description": "Custom commit message template (overrides default conventional commits format)"
+        },
+        "quickcommit.includeUnstaged": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include unstaged changes if no staged changes are found"
+        },
+        "quickcommit.excludeLockFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Exclude package manager lock files from commit message analysis"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "ignore": "^5.2.4"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4",
+    "vsce": "^2.15.0"
+  }
+}
