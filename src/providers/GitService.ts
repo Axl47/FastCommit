@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { spawnSync } from 'child_process';
 import { shouldExcludeLockFile } from '../utils/exclusions';
-import { QuickCommitIgnoreController } from '../utils/ignore';
+import { FastCommitIgnoreController } from '../utils/ignore';
 import { getWorkspacePath } from '../utils/path';
 
 // Maximum size for diff content (approximately 10,000 tokens)
@@ -27,11 +27,11 @@ export interface GitRepository {
 }
 
 /**
- * Simplified Git service for QuickCommit
+ * Simplified Git service for FastCommit
  * Handles Git operations and integrates with VS Code's Git extension
  */
 export class GitService {
-    private ignoreController: QuickCommitIgnoreController | null = null;
+    private ignoreController: FastCommitIgnoreController | null = null;
     private targetRepository: GitRepository | null = null;
     private workspaceRoot: string;
     private isInitialized: boolean = false;
@@ -54,7 +54,7 @@ export class GitService {
     }
 
     private async initializeIgnoreController(): Promise<void> {
-        this.ignoreController = new QuickCommitIgnoreController(this.workspaceRoot);
+        this.ignoreController = new FastCommitIgnoreController(this.workspaceRoot);
         await this.ignoreController.initialize();
     }
 
@@ -64,37 +64,37 @@ export class GitService {
      */
     private configureRepositoryContext(resourceUri?: vscode.Uri): void {
         try {
-            console.log('QuickCommit: Configuring repository context...');
+            console.log('FastCommit: Configuring repository context...');
             
             const gitExtension = vscode.extensions.getExtension('vscode.git');
             if (!gitExtension?.isActive) {
-                console.warn('QuickCommit: VS Code Git extension not found or not active');
+                console.warn('FastCommit: VS Code Git extension not found or not active');
                 return;
             }
 
             const gitApi = gitExtension.exports.getAPI(1);
             const repositories = gitApi?.repositories;
             
-            console.log(`QuickCommit: Found ${repositories?.length || 0} Git repositories`);
+            console.log(`FastCommit: Found ${repositories?.length || 0} Git repositories`);
             
             if (!repositories || repositories.length === 0) {
-                console.warn('QuickCommit: No Git repositories found');
+                console.warn('FastCommit: No Git repositories found');
                 this.targetRepository = null;
                 return;
             }
 
             // Log all available repositories
             repositories.forEach((repo: any, index: number) => {
-                console.log(`QuickCommit: Repository ${index}: ${repo.rootUri?.fsPath || 'no path'}`);
+                console.log(`FastCommit: Repository ${index}: ${repo.rootUri?.fsPath || 'no path'}`);
             });
 
             // Try to find the repository that matches the provided URI or current workspace
             if (resourceUri) {
-                console.log(`QuickCommit: Looking for repository matching resource URI: ${resourceUri.fsPath}`);
+                console.log(`FastCommit: Looking for repository matching resource URI: ${resourceUri.fsPath}`);
                 for (const repo of repositories) {
                     if (repo.rootUri && resourceUri.fsPath.startsWith(repo.rootUri.fsPath)) {
                         this.targetRepository = repo;
-                        console.log(`QuickCommit: Selected repository by resource URI: ${repo.rootUri.fsPath}`);
+                        console.log(`FastCommit: Selected repository by resource URI: ${repo.rootUri.fsPath}`);
                         return;
                     }
                 }
@@ -102,21 +102,21 @@ export class GitService {
 
             // If no specific resource URI or no matching repository found,
             // try to find one that matches our workspace root
-            console.log(`QuickCommit: Looking for repository matching workspace root: ${this.workspaceRoot}`);
+            console.log(`FastCommit: Looking for repository matching workspace root: ${this.workspaceRoot}`);
             for (const repo of repositories) {
                 if (repo.rootUri && repo.rootUri.fsPath === this.workspaceRoot) {
                     this.targetRepository = repo;
-                    console.log(`QuickCommit: Selected repository by workspace root: ${repo.rootUri.fsPath}`);
+                    console.log(`FastCommit: Selected repository by workspace root: ${repo.rootUri.fsPath}`);
                     return;
                 }
             }
 
             // Fallback to the first repository
             this.targetRepository = repositories[0];
-            console.log(`QuickCommit: Using first repository as fallback: ${this.targetRepository?.rootUri?.fsPath || 'unknown'}`);
+            console.log(`FastCommit: Using first repository as fallback: ${this.targetRepository?.rootUri?.fsPath || 'unknown'}`);
             
         } catch (error) {
-            console.error('QuickCommit: Error configuring Git repository context:', error);
+            console.error('FastCommit: Error configuring Git repository context:', error);
             this.targetRepository = null;
         }
     }
@@ -168,12 +168,12 @@ export class GitService {
         // Ensure we have the latest repository context
         this.configureRepositoryContext();
         
-        console.log('QuickCommit: Setting commit message:', message);
-        console.log('QuickCommit: Target repository:', this.targetRepository?.rootUri?.fsPath || 'null');
+        console.log('FastCommit: Setting commit message:', message);
+        console.log('FastCommit: Target repository:', this.targetRepository?.rootUri?.fsPath || 'null');
         
         if (this.targetRepository) {
             try {
-                console.log('QuickCommit: Repository details:', {
+                console.log('FastCommit: Repository details:', {
                     rootUri: this.targetRepository.rootUri?.fsPath,
                     inputBoxExists: !!this.targetRepository.inputBox,
                     currentInputValue: this.targetRepository.inputBox?.value || 'undefined'
@@ -182,7 +182,7 @@ export class GitService {
                 const oldValue = this.targetRepository.inputBox.value;
                 this.targetRepository.inputBox.value = message;
                 
-                console.log('QuickCommit: Input box value change:', {
+                console.log('FastCommit: Input box value change:', {
                     before: oldValue,
                     after: this.targetRepository.inputBox.value,
                     messageSet: message
@@ -190,21 +190,21 @@ export class GitService {
                 
                 // Verify the value was actually set
                 if (this.targetRepository.inputBox.value === message) {
-                    console.log('QuickCommit: Commit message set in Git input box successfully - VERIFIED');
-                    vscode.window.showInformationMessage('QuickCommit: Commit message generated and set!');
+                    console.log('FastCommit: Commit message set in Git input box successfully - VERIFIED');
+                    vscode.window.showInformationMessage('FastCommit: Commit message generated and set!');
                 } else {
-                    console.warn('QuickCommit: Commit message was not properly set - value mismatch');
+                    console.warn('FastCommit: Commit message was not properly set - value mismatch');
                     vscode.window.showWarningMessage('Commit message generation completed but may not have been set properly');
                 }
                 return;
             } catch (error) {
-                console.error('QuickCommit: Error setting commit message in Git input box:', error);
+                console.error('FastCommit: Error setting commit message in Git input box:', error);
                 vscode.window.showWarningMessage('Failed to set commit message in Git box, copying to clipboard instead');
             }
         }
 
         // Fallback: copy to clipboard if Git extension API is not available
-        console.warn('QuickCommit: No Git repository context available, copying to clipboard as fallback');
+        console.warn('FastCommit: No Git repository context available, copying to clipboard as fallback');
         this.copyToClipboard(message);
     }
 
@@ -229,7 +229,7 @@ export class GitService {
                 const changeType = staged ? 'Staged' : 'Unstaged';
                 
                 if (diff.length > MAX_DIFF_SIZE) {
-                    console.log(`QuickCommit: Diff is too large (${diff.length} chars), creating file summary instead`);
+                    console.log(`FastCommit: Diff is too large (${diff.length} chars), creating file summary instead`);
                     
                     // Create a summary of changed files instead of full diff
                     const filesSummary = this.createFilesSummary(changes);
@@ -239,7 +239,7 @@ export class GitService {
                 }
             } catch (error) {
                 const changeType = staged ? 'Staged' : 'Unstaged';
-                console.error('QuickCommit: Error getting diff, falling back to file summary:', error);
+                console.error('FastCommit: Error getting diff, falling back to file summary:', error);
                 
                 // Fallback to file summary if diff fails
                 const filesSummary = this.createFilesSummary(changes);

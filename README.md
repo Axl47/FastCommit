@@ -1,4 +1,4 @@
-# QuickCommit
+# FastCommit
 
 AI-powered commit message generator for VS Code that creates conventional commit messages based on your staged changes.
 
@@ -16,12 +16,12 @@ AI-powered commit message generator for VS Code that creates conventional commit
 1. **Install the extension** from the VS Code Marketplace
 2. **Configure your API key**:
    - Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-   - Run `QuickCommit: Configure API Key`
+   - Run `FastCommit: Configure API Key`
    - Enter your API key for your preferred provider
 3. **Generate commit messages**:
    - Stage your changes in Git
-   - Click the QuickCommit button in the Source Control panel
-   - Or run `QuickCommit: Generate Commit Message` from Command Palette
+   - Click the FastCommit button in the Source Control panel
+   - Or run `FastCommit: Generate Commit Message` from Command Palette
 
 ## Supported AI Providers
 
@@ -42,7 +42,7 @@ AI-powered commit message generator for VS Code that creates conventional commit
 
 ### Settings
 
-Open VS Code Settings (`Ctrl+,` / `Cmd+,`) and search for "QuickCommit":
+Open VS Code Settings (`Ctrl+,` / `Cmd+,`) and search for "FastCommit":
 
 - **API Provider**: Choose between OpenAI, Anthropic, or OpenRouter
 - **Model**: Specify the model to use (optional, uses provider defaults)
@@ -56,7 +56,7 @@ API keys are stored securely in VS Code's secret storage:
 
 ```bash
 # Configure via Command Palette
-QuickCommit: Configure API Key
+FastCommit: Configure API Key
 ```
 
 ### Example .gitignore
@@ -80,7 +80,7 @@ README.md
 
 ## How It Works
 
-1. **Analyzes Changes**: QuickCommit examines your staged Git changes
+1. **Analyzes Changes**: FastCommit examines your staged Git changes
 2. **Generates Context**: Creates a comprehensive diff and repository context
 3. **AI Processing**: Sends context to your chosen AI provider
 4. **Formats Output**: Ensures the response follows conventional commit standards
@@ -88,7 +88,7 @@ README.md
 
 ## Conventional Commit Format
 
-QuickCommit generates messages following the [Conventional Commits](https://conventionalcommits.org/) specification:
+FastCommit generates messages following the [Conventional Commits](https://conventionalcommits.org/) specification:
 
 ```
 <type>[optional scope]: <description>
@@ -143,12 +143,12 @@ refactor(utils): extract common validation logic
 
 - API keys are stored locally in VS Code's encrypted secret storage
 - Code diffs are sent to your chosen AI provider for analysis
-- No data is stored or logged by the QuickCommit extension
+- No data is stored or logged by the FastCommit extension
 - All communication uses HTTPS encryption
 
 ## Contributing
 
-QuickCommit is open source! Contributions welcome:
+FastCommit is open source! Contributions welcome:
 
 - Report bugs and request features
 - Submit pull requests

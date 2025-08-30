@@ -1,5 +1,5 @@
 /**
- * Simplified API handler system for QuickCommit
+ * Simplified API handler system for FastCommit
  * Supports basic AI providers for commit message generation
  */
 
@@ -148,22 +148,22 @@ class OpenAIHandler extends BaseApiHandler {
             max_completion_tokens: this.config.maxTokens || 30000
         };
 
-        console.log('QuickCommit: Making OpenAI API request to:', url);
-        console.log('QuickCommit: Request model:', body.model);
+        console.log('FastCommit: Making OpenAI API request to:', url);
+        console.log('FastCommit: Request model:', body.model);
 
         try {
             const response = await this.makeRequest(url, headers, body);
-            console.log('QuickCommit: Raw OpenAI API response:', JSON.stringify(response, null, 2));
+            console.log('FastCommit: Raw OpenAI API response:', JSON.stringify(response, null, 2));
             
             const content = response.choices?.[0]?.message?.content;
             if (!content) {
                 throw new Error(`Invalid OpenAI API response structure: ${JSON.stringify(response)}`);
             }
             
-            console.log('QuickCommit: Extracted commit message from OpenAI:', content);
+            console.log('FastCommit: Extracted commit message from OpenAI:', content);
             return content;
         } catch (error) {
-            console.error('QuickCommit: OpenAI API error:', error);
+            console.error('FastCommit: OpenAI API error:', error);
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             throw new Error(`OpenAI API request failed: ${errorMessage}`);
         }
@@ -208,22 +208,22 @@ class AnthropicHandler extends BaseApiHandler {
             temperature: this.config.temperature || 1
         };
 
-        console.log('QuickCommit: Making Anthropic API request to:', url);
-        console.log('QuickCommit: Request model:', body.model);
+        console.log('FastCommit: Making Anthropic API request to:', url);
+        console.log('FastCommit: Request model:', body.model);
 
         try {
             const response = await this.makeRequest(url, headers, body);
-            console.log('QuickCommit: Raw Anthropic API response:', JSON.stringify(response, null, 2));
+            console.log('FastCommit: Raw Anthropic API response:', JSON.stringify(response, null, 2));
             
             const content = response.content?.[0]?.text;
             if (!content) {
                 throw new Error(`Invalid Anthropic API response structure: ${JSON.stringify(response)}`);
             }
             
-            console.log('QuickCommit: Extracted commit message from Anthropic:', content);
+            console.log('FastCommit: Extracted commit message from Anthropic:', content);
             return content;
         } catch (error) {
-            console.error('QuickCommit: Anthropic API error:', error);
+            console.error('FastCommit: Anthropic API error:', error);
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             throw new Error(`Anthropic API request failed: ${errorMessage}`);
         }
@@ -253,8 +253,8 @@ class OpenRouterHandler extends BaseApiHandler {
         const url = this.config.baseUrl || 'https://openrouter.ai/api/v1/chat/completions';
         const headers = {
             'Authorization': `Bearer ${this.config.apiKey}`,
-            'HTTP-Referer': 'https://github.com/quickcommit/vscode-extension',
-            'X-Title': 'QuickCommit VS Code Extension'
+            'HTTP-Referer': 'https://github.com/fastcommit/vscode-extension',
+            'X-Title': 'FastCommit VS Code Extension'
         };
 
         const body = {
@@ -269,22 +269,22 @@ class OpenRouterHandler extends BaseApiHandler {
             max_completion_tokens: this.config.maxTokens || 30000
         };
 
-        console.log('QuickCommit: Making OpenRouter API request to:', url);
-        console.log('QuickCommit: Request model:', body.model);
+        console.log('FastCommit: Making OpenRouter API request to:', url);
+        console.log('FastCommit: Request model:', body.model);
 
         try {
             const response = await this.makeRequest(url, headers, body);
-            console.log('QuickCommit: Raw OpenRouter API response:', JSON.stringify(response, null, 2));
+            console.log('FastCommit: Raw OpenRouter API response:', JSON.stringify(response, null, 2));
             
             const content = response.choices?.[0]?.message?.content;
             if (!content) {
                 throw new Error(`Invalid OpenRouter API response structure: ${JSON.stringify(response)}`);
             }
             
-            console.log('QuickCommit: Extracted commit message from OpenRouter:', content);
+            console.log('FastCommit: Extracted commit message from OpenRouter:', content);
             return content;
         } catch (error) {
-            console.error('QuickCommit: OpenRouter API error:', error);
+            console.error('FastCommit: OpenRouter API error:', error);
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             throw new Error(`OpenRouter API request failed: ${errorMessage}`);
         }

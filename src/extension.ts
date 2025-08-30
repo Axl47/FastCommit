@@ -8,13 +8,13 @@ let outputChannel: vscode.OutputChannel | undefined;
  * Extension activation function
  */
 export async function activate(context: vscode.ExtensionContext) {
-    console.log('QuickCommit extension is being activated...');
+    console.log('FastCommit extension is being activated...');
 
     // Create output channel for logging
-    outputChannel = vscode.window.createOutputChannel('QuickCommit');
+    outputChannel = vscode.window.createOutputChannel('FastCommit');
     context.subscriptions.push(outputChannel);
 
-    outputChannel.appendLine('QuickCommit extension activated');
+    outputChannel.appendLine('FastCommit extension activated');
 
     try {
         // Ensure Git extension is activated first
@@ -24,20 +24,20 @@ export async function activate(context: vscode.ExtensionContext) {
         commitMessageProvider = new CommitMessageProvider(context, outputChannel);
         await commitMessageProvider.activate();
 
-        outputChannel.appendLine('QuickCommit: Commit message provider registered successfully');
+        outputChannel.appendLine('FastCommit: Commit message provider registered successfully');
 
         // Show a welcome message on first activation
-        const hasShownWelcome = context.globalState.get<boolean>('quickcommit.hasShownWelcome', false);
+        const hasShownWelcome = context.globalState.get<boolean>('fastcommit.hasShownWelcome', false);
         if (!hasShownWelcome) {
             showWelcomeMessage(context);
-            await context.globalState.update('quickcommit.hasShownWelcome', true);
+            await context.globalState.update('fastcommit.hasShownWelcome', true);
         }
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        outputChannel.appendLine(`QuickCommit: Failed to activate: ${errorMessage}`);
-        vscode.window.showErrorMessage(`QuickCommit: Failed to activate: ${errorMessage}`);
-        console.error('QuickCommit activation error:', error);
+        outputChannel.appendLine(`FastCommit: Failed to activate: ${errorMessage}`);
+        vscode.window.showErrorMessage(`FastCommit: Failed to activate: ${errorMessage}`);
+        console.error('FastCommit activation error:', error);
     }
 }
 
@@ -53,11 +53,11 @@ async function ensureGitExtensionActivated(outputChannel: vscode.OutputChannel):
         }
 
         if (!gitExtension.isActive) {
-            outputChannel.appendLine('QuickCommit: Activating Git extension...');
+            outputChannel.appendLine('FastCommit: Activating Git extension...');
             await gitExtension.activate();
-            outputChannel.appendLine('QuickCommit: Git extension activated');
+            outputChannel.appendLine('FastCommit: Git extension activated');
         } else {
-            outputChannel.appendLine('QuickCommit: Git extension already active');
+            outputChannel.appendLine('FastCommit: Git extension already active');
         }
 
         // Verify we can access the Git API
@@ -66,12 +66,12 @@ async function ensureGitExtensionActivated(outputChannel: vscode.OutputChannel):
             throw new Error('Failed to access Git API');
         }
 
-        outputChannel.appendLine(`QuickCommit: Git API available with ${gitApi.repositories?.length || 0} repositories`);
+        outputChannel.appendLine(`FastCommit: Git API available with ${gitApi.repositories?.length || 0} repositories`);
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown Git extension error';
-        outputChannel.appendLine(`QuickCommit: Git extension issue: ${errorMessage}`);
-        throw new Error(`Git extension required for QuickCommit: ${errorMessage}`);
+        outputChannel.appendLine(`FastCommit: Git extension issue: ${errorMessage}`);
+        throw new Error(`Git extension required for FastCommit: ${errorMessage}`);
     }
 }
 
@@ -79,7 +79,7 @@ async function ensureGitExtensionActivated(outputChannel: vscode.OutputChannel):
  * Extension deactivation function
  */
 export function deactivate() {
-    console.log('QuickCommit extension is being deactivated...');
+    console.log('FastCommit extension is being deactivated...');
     
     if (commitMessageProvider) {
         commitMessageProvider.dispose();
@@ -87,7 +87,7 @@ export function deactivate() {
     }
 
     if (outputChannel) {
-        outputChannel.appendLine('QuickCommit extension deactivated');
+        outputChannel.appendLine('FastCommit extension deactivated');
         outputChannel.dispose();
         outputChannel = undefined;
     }
@@ -97,21 +97,21 @@ export function deactivate() {
  * Show welcome message to new users
  */
 function showWelcomeMessage(context: vscode.ExtensionContext) {
-    const message = `Welcome to QuickCommit! 🚀
+    const message = `Welcome to FastCommit! 🚀
 
-QuickCommit generates AI-powered commit messages following conventional commit standards.
+FastCommit generates AI-powered commit messages following conventional commit standards.
 
 To get started:
 1. Configure your API key (OpenAI, Anthropic, or OpenRouter)
 2. Stage your changes in Git
-3. Click the QuickCommit button in the Source Control panel
+3. Click the FastCommit button in the Source Control panel
 
 Would you like to configure your API key now?`;
 
     vscode.window.showInformationMessage(message, 'Configure API Key', 'Later')
         .then(selection => {
             if (selection === 'Configure API Key') {
-                vscode.commands.executeCommand('quickcommit.configureApiKey');
+                vscode.commands.executeCommand('fastcommit.configureApiKey');
             }
         });
 }

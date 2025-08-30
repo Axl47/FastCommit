@@ -3,10 +3,10 @@ import { ApiConfiguration } from '../api';
 import { getDefaultModelConfig } from '../prompts/commit-template';
 
 /**
- * Configuration management for QuickCommit extension
+ * Configuration management for FastCommit extension
  */
 export class ConfigurationManager {
-    private static readonly CONFIG_SECTION = 'quickcommit';
+    private static readonly CONFIG_SECTION = 'fastcommit';
     
     /**
      * Get the current API configuration from VS Code settings
@@ -35,7 +35,7 @@ export class ConfigurationManager {
      * Get API key from VS Code secret storage
      */
     static async getApiKey(context: vscode.ExtensionContext, provider: string): Promise<string | undefined> {
-        const keyName = `quickcommit.${provider}.apiKey`;
+        const keyName = `fastcommit.${provider}.apiKey`;
         return await context.secrets.get(keyName);
     }
 
@@ -43,7 +43,7 @@ export class ConfigurationManager {
      * Set API key in VS Code secret storage
      */
     static async setApiKey(context: vscode.ExtensionContext, provider: string, apiKey: string): Promise<void> {
-        const keyName = `quickcommit.${provider}.apiKey`;
+        const keyName = `fastcommit.${provider}.apiKey`;
         await context.secrets.store(keyName, apiKey);
     }
 
@@ -55,7 +55,7 @@ export class ConfigurationManager {
         const apiKey = await this.getApiKey(context, config.apiProvider);
         
         if (!apiKey) {
-            throw new Error(`API key not configured for ${config.apiProvider}. Please run "QuickCommit: Configure API Key" command.`);
+            throw new Error(`API key not configured for ${config.apiProvider}. Please run "FastCommit: Configure API Key" command.`);
         }
 
         return {
@@ -119,12 +119,12 @@ export class ConfigurationManager {
      * Show configuration instructions to user
      */
     static showConfigurationInstructions(): void {
-        const message = `QuickCommit requires an API key to generate commit messages. Please configure:
+        const message = `FastCommit requires an API key to generate commit messages. Please configure:
 
 1. Go to VS Code Settings (Cmd/Ctrl + ,)
-2. Search for "QuickCommit"
+2. Search for "FastCommit"
 3. Select your preferred API provider
-4. Run "QuickCommit: Configure API Key" from Command Palette
+4. Run "FastCommit: Configure API Key" from Command Palette
 
 Supported providers:
 • OpenAI (GPT models) - Get key from https://platform.openai.com
@@ -134,9 +134,9 @@ Supported providers:
         vscode.window.showInformationMessage(message, 'Open Settings', 'Configure API Key')
             .then(selection => {
                 if (selection === 'Open Settings') {
-                    vscode.commands.executeCommand('workbench.action.openSettings', 'quickcommit');
+                    vscode.commands.executeCommand('workbench.action.openSettings', 'fastcommit');
                 } else if (selection === 'Configure API Key') {
-                    vscode.commands.executeCommand('quickcommit.configureApiKey');
+                    vscode.commands.executeCommand('fastcommit.configureApiKey');
                 }
             });
     }

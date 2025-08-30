@@ -1,5 +1,5 @@
 /**
- * Commit message prompt template for QuickCommit
+ * Commit message prompt template for FastCommit
  * Based on conventional commits specification
  */
 

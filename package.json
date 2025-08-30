@@ -1,9 +1,10 @@
 {
-  "name": "quickcommit",
-  "displayName": "QuickCommit",
+  "name": "fastcommit",
+  "displayName": "FastCommit",
   "description": "AI-powered commit message generator for VS Code",
-  "version": "0.0.11",
-  "publisher": "quickcommit",
+  "version": "1.0.0",
+  "publisher": "fastcommit",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -17,38 +18,47 @@
     "conventional-commits",
     "commit-message"
   ],
-  "activationEvents": [
-    "onCommand:quickcommit.generateMessage"
-  ],
   "main": "./out/extension.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/npm/cli.git"
+  },
   "contributes": {
     "commands": [
       {
-        "command": "quickcommit.generateMessage",
+        "command": "fastcommit.generateMessage",
         "title": "Generate Commit Message",
-        "category": "QuickCommit",
+        "category": "FastCommit",
         "icon": "$(git-commit)"
+      },
+      {
+        "command": "fastcommit.configureApiKey",
+        "title": "Configure API Key",
+        "category": "FastCommit"
       }
     ],
     "menus": {
       "scm/title": [
         {
-          "command": "quickcommit.generateMessage",
+          "command": "fastcommit.generateMessage",
           "when": "scmProvider == git",
           "group": "navigation"
         }
       ],
       "commandPalette": [
         {
-          "command": "quickcommit.generateMessage",
+          "command": "fastcommit.generateMessage",
           "when": "scmProvider == git"
+        },
+        {
+          "command": "fastcommit.configureApiKey"
         }
       ]
     },
     "configuration": {
-      "title": "QuickCommit",
+      "title": "FastCommit",
       "properties": {
-        "quickcommit.apiProvider": {
+        "fastcommit.apiProvider": {
           "type": "string",
           "default": "openai",
           "enum": ["openai", "anthropic", "openrouter"],
@@ -59,22 +69,22 @@
           ],
           "description": "AI provider for commit message generation"
         },
-        "quickcommit.model": {
+        "fastcommit.model": {
           "type": "string",
-          "default": "gpt-4",
+          "default": "gpt-5-mini",
           "description": "Model to use for commit message generation"
         },
-        "quickcommit.customTemplate": {
+        "fastcommit.customTemplate": {
           "type": "string",
           "default": "",
           "description": "Custom commit message template (overrides default conventional commits format)"
         },
-        "quickcommit.includeUnstaged": {
+        "fastcommit.includeUnstaged": {
           "type": "boolean",
           "default": true,
           "description": "Include unstaged changes if no staged changes are found"
         },
-        "quickcommit.excludeLockFiles": {
+        "fastcommit.excludeLockFiles": {
           "type": "boolean",
           "default": true,
           "description": "Exclude package manager lock files from commit message analysis"

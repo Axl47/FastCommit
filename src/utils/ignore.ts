@@ -4,10 +4,10 @@ import { fileExistsAtPath, readFileContent } from './fs';
 import { normalizePath } from './path';
 
 /**
- * Simplified ignore controller for QuickCommit
+ * Simplified ignore controller for FastCommit
  * Supports .gitignore files in the workspace root
  */
-export class QuickCommitIgnoreController {
+export class FastCommitIgnoreController {
     private ignoreInstance: Ignore;
     private hasIgnoreFile: boolean = false;
 
