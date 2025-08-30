@@ -17,6 +17,9 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine('QuickCommit extension activated');
 
     try {
+        // Ensure Git extension is activated first
+        await ensureGitExtensionActivated(outputChannel);
+
         // Initialize the commit message provider
         commitMessageProvider = new CommitMessageProvider(context, outputChannel);
         await commitMessageProvider.activate();
@@ -35,6 +38,40 @@ export async function activate(context: vscode.ExtensionContext) {
         outputChannel.appendLine(`QuickCommit: Failed to activate: ${errorMessage}`);
         vscode.window.showErrorMessage(`QuickCommit: Failed to activate: ${errorMessage}`);
         console.error('QuickCommit activation error:', error);
+    }
+}
+
+/**
+ * Ensure the Git extension is activated and ready
+ */
+async function ensureGitExtensionActivated(outputChannel: vscode.OutputChannel): Promise<void> {
+    try {
+        const gitExtension = vscode.extensions.getExtension('vscode.git');
+        
+        if (!gitExtension) {
+            throw new Error('VS Code Git extension not found');
+        }
+
+        if (!gitExtension.isActive) {
+            outputChannel.appendLine('QuickCommit: Activating Git extension...');
+            await gitExtension.activate();
+            outputChannel.appendLine('QuickCommit: Git extension activated');
+        } else {
+            outputChannel.appendLine('QuickCommit: Git extension already active');
+        }
+
+        // Verify we can access the Git API
+        const gitApi = gitExtension.exports?.getAPI(1);
+        if (!gitApi) {
+            throw new Error('Failed to access Git API');
+        }
+
+        outputChannel.appendLine(`QuickCommit: Git API available with ${gitApi.repositories?.length || 0} repositories`);
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown Git extension error';
+        outputChannel.appendLine(`QuickCommit: Git extension issue: ${errorMessage}`);
+        throw new Error(`Git extension required for QuickCommit: ${errorMessage}`);
     }
 }
 

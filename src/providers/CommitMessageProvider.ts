@@ -24,6 +24,16 @@ export class CommitMessageProvider {
      */
     async activate(): Promise<void> {
         this.outputChannel.appendLine('QuickCommit commit message provider activated');
+        
+        // Initialize the Git service
+        try {
+            await this.gitService.initialize();
+            this.outputChannel.appendLine('QuickCommit: Git service initialized');
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.outputChannel.appendLine(`QuickCommit: Git service initialization failed: ${errorMessage}`);
+            throw error;
+        }
 
         // Register the main command
         const generateCommand = vscode.commands.registerCommand(
@@ -117,9 +127,28 @@ export class CommitMessageProvider {
                     this.outputChannel.appendLine(`Generated commit message: ${commitMessage}`);
                     
                 } catch (error) {
+                    console.error('QuickCommit: Error in generateCommitMessage:', error);
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-                    vscode.window.showErrorMessage(`QuickCommit: Failed to generate commit message: ${errorMessage}`);
-                    console.error('Error generating commit message:', error);
+                    
+                    // Provide specific guidance for common errors
+                    if (errorMessage.includes('API key is not configured')) {
+                        vscode.window.showErrorMessage(
+                            `QuickCommit: ${errorMessage}`,
+                            'Configure API Key'
+                        ).then(selection => {
+                            if (selection === 'Configure API Key') {
+                                vscode.commands.executeCommand('quickcommit.configureApiKey');
+                            }
+                        });
+                    } else if (errorMessage.includes('API request failed')) {
+                        vscode.window.showErrorMessage(
+                            `QuickCommit: ${errorMessage}. Check your API key and internet connection.`
+                        );
+                    } else if (errorMessage.includes('No changes found')) {
+                        vscode.window.showInformationMessage('QuickCommit: No changes found to analyze. Make some changes and try again.');
+                    } else {
+                        vscode.window.showErrorMessage(`QuickCommit: ${errorMessage}`);
+                    }
                 }
             }
         );
@@ -188,7 +217,20 @@ export class CommitMessageProvider {
      * Call AI service to generate commit message
      */
     private async callAIForCommitMessage(gitContext: string): Promise<string> {
+        console.log('QuickCommit: Starting AI commit message generation');
+        
         const config = await ConfigurationManager.getCompleteConfiguration(this.context);
+        console.log('QuickCommit: API Configuration:', {
+            provider: config.apiProvider,
+            model: config.model,
+            hasApiKey: !!config.apiKey,
+            baseUrl: config.baseUrl
+        });
+
+        // Validate configuration
+        if (!config.apiKey) {
+            throw new Error(`API key is not configured for ${config.apiProvider}. Please run "QuickCommit: Configure API Key" command to set it up.`);
+        }
         
         // Check if we should generate a different message
         const shouldGenerateDifferent = 
@@ -203,11 +245,39 @@ export class CommitMessageProvider {
 
         const prompt = createCommitMessagePrompt(promptParams);
         
-        // Call AI service
-        const response = await completePrompt(config, prompt);
+        // Estimate token count (rough approximation: 4 characters per token)
+        const estimatedTokens = Math.ceil(prompt.length / 4);
+        console.log('QuickCommit: Generated prompt stats:', {
+            length: prompt.length,
+            estimatedTokens: estimatedTokens,
+            preview: prompt.substring(0, 500) + '...'
+        });
         
-        // Extract and clean up the commit message
-        return extractCommitMessage(response);
+        // Warn if prompt is very large
+        if (estimatedTokens > 10000) {
+            console.warn(`QuickCommit: Large prompt detected (${estimatedTokens} estimated tokens). This may cause issues with token limits.`);
+        }
+        
+        try {
+            // Call AI service
+            console.log('QuickCommit: Calling AI service...');
+            const response = await completePrompt(config, prompt);
+            console.log('QuickCommit: Raw AI response:', response);
+            
+            // Extract and clean up the commit message
+            const extractedMessage = extractCommitMessage(response);
+            console.log('QuickCommit: Extracted commit message:', extractedMessage);
+            
+            if (!extractedMessage || extractedMessage.trim() === '') {
+                throw new Error('AI service returned an empty commit message');
+            }
+            
+            return extractedMessage;
+        } catch (error) {
+            console.error('QuickCommit: Error in AI call:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            throw new Error(`Failed to generate commit message: ${errorMessage}`);
+        }
     }
 
     /**

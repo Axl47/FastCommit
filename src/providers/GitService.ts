@@ -5,6 +5,9 @@ import { shouldExcludeLockFile } from '../utils/exclusions';
 import { QuickCommitIgnoreController } from '../utils/ignore';
 import { getWorkspacePath } from '../utils/path';
 
+// Maximum size for diff content (approximately 10,000 tokens)
+const MAX_DIFF_SIZE = 40000;
+
 export interface GitChange {
     filePath: string;
     status: string;
@@ -31,11 +34,23 @@ export class GitService {
     private ignoreController: QuickCommitIgnoreController | null = null;
     private targetRepository: GitRepository | null = null;
     private workspaceRoot: string;
+    private isInitialized: boolean = false;
 
     constructor() {
         this.workspaceRoot = getWorkspacePath();
-        this.initializeIgnoreController();
-        this.configureRepositoryContext();
+    }
+
+    /**
+     * Initialize the GitService asynchronously
+     * Must be called before using any Git operations
+     */
+    async initialize(): Promise<void> {
+        if (this.isInitialized) {
+            return;
+        }
+
+        await this.initializeIgnoreController();
+        this.isInitialized = true;
     }
 
     private async initializeIgnoreController(): Promise<void> {
@@ -45,22 +60,64 @@ export class GitService {
 
     /**
      * Configure the repository context using VS Code's Git extension
+     * This should be called before each Git operation to ensure we have the right repository
      */
-    private configureRepositoryContext(): void {
+    private configureRepositoryContext(resourceUri?: vscode.Uri): void {
         try {
+            console.log('QuickCommit: Configuring repository context...');
+            
             const gitExtension = vscode.extensions.getExtension('vscode.git');
             if (!gitExtension?.isActive) {
-                console.warn('VS Code Git extension not found or not active');
+                console.warn('QuickCommit: VS Code Git extension not found or not active');
                 return;
             }
 
             const gitApi = gitExtension.exports.getAPI(1);
-            if (gitApi?.repositories && gitApi.repositories.length > 0) {
-                // Use the first repository for now
-                this.targetRepository = gitApi.repositories[0];
+            const repositories = gitApi?.repositories;
+            
+            console.log(`QuickCommit: Found ${repositories?.length || 0} Git repositories`);
+            
+            if (!repositories || repositories.length === 0) {
+                console.warn('QuickCommit: No Git repositories found');
+                this.targetRepository = null;
+                return;
             }
+
+            // Log all available repositories
+            repositories.forEach((repo: any, index: number) => {
+                console.log(`QuickCommit: Repository ${index}: ${repo.rootUri?.fsPath || 'no path'}`);
+            });
+
+            // Try to find the repository that matches the provided URI or current workspace
+            if (resourceUri) {
+                console.log(`QuickCommit: Looking for repository matching resource URI: ${resourceUri.fsPath}`);
+                for (const repo of repositories) {
+                    if (repo.rootUri && resourceUri.fsPath.startsWith(repo.rootUri.fsPath)) {
+                        this.targetRepository = repo;
+                        console.log(`QuickCommit: Selected repository by resource URI: ${repo.rootUri.fsPath}`);
+                        return;
+                    }
+                }
+            }
+
+            // If no specific resource URI or no matching repository found,
+            // try to find one that matches our workspace root
+            console.log(`QuickCommit: Looking for repository matching workspace root: ${this.workspaceRoot}`);
+            for (const repo of repositories) {
+                if (repo.rootUri && repo.rootUri.fsPath === this.workspaceRoot) {
+                    this.targetRepository = repo;
+                    console.log(`QuickCommit: Selected repository by workspace root: ${repo.rootUri.fsPath}`);
+                    return;
+                }
+            }
+
+            // Fallback to the first repository
+            this.targetRepository = repositories[0];
+            console.log(`QuickCommit: Using first repository as fallback: ${this.targetRepository?.rootUri?.fsPath || 'unknown'}`);
+            
         } catch (error) {
-            console.error('Error configuring Git repository context:', error);
+            console.error('QuickCommit: Error configuring Git repository context:', error);
+            this.targetRepository = null;
         }
     }
 
@@ -68,6 +125,12 @@ export class GitService {
      * Gather information about changes (staged or unstaged)
      */
     async gatherChanges(options: GitProgressOptions): Promise<GitChange[]> {
+        // Ensure we're initialized and have repository context
+        if (!this.isInitialized) {
+            await this.initialize();
+        }
+        this.configureRepositoryContext();
+
         try {
             const statusOutput = this.getStatus(options);
             if (!statusOutput.trim()) {
@@ -102,12 +165,46 @@ export class GitService {
      * Set the commit message in the Git input box
      */
     setCommitMessage(message: string): void {
+        // Ensure we have the latest repository context
+        this.configureRepositoryContext();
+        
+        console.log('QuickCommit: Setting commit message:', message);
+        console.log('QuickCommit: Target repository:', this.targetRepository?.rootUri?.fsPath || 'null');
+        
         if (this.targetRepository) {
-            this.targetRepository.inputBox.value = message;
-            return;
+            try {
+                console.log('QuickCommit: Repository details:', {
+                    rootUri: this.targetRepository.rootUri?.fsPath,
+                    inputBoxExists: !!this.targetRepository.inputBox,
+                    currentInputValue: this.targetRepository.inputBox?.value || 'undefined'
+                });
+                
+                const oldValue = this.targetRepository.inputBox.value;
+                this.targetRepository.inputBox.value = message;
+                
+                console.log('QuickCommit: Input box value change:', {
+                    before: oldValue,
+                    after: this.targetRepository.inputBox.value,
+                    messageSet: message
+                });
+                
+                // Verify the value was actually set
+                if (this.targetRepository.inputBox.value === message) {
+                    console.log('QuickCommit: Commit message set in Git input box successfully - VERIFIED');
+                    vscode.window.showInformationMessage('QuickCommit: Commit message generated and set!');
+                } else {
+                    console.warn('QuickCommit: Commit message was not properly set - value mismatch');
+                    vscode.window.showWarningMessage('Commit message generation completed but may not have been set properly');
+                }
+                return;
+            } catch (error) {
+                console.error('QuickCommit: Error setting commit message in Git input box:', error);
+                vscode.window.showWarningMessage('Failed to set commit message in Git box, copying to clipboard instead');
+            }
         }
 
         // Fallback: copy to clipboard if Git extension API is not available
+        console.warn('QuickCommit: No Git repository context available, copying to clipboard as fallback');
         this.copyToClipboard(message);
     }
 
@@ -115,19 +212,38 @@ export class GitService {
      * Get complete context for commit message generation
      */
     async getCommitContext(changes: GitChange[], options: GitProgressOptions): Promise<string> {
+        // Ensure we're initialized and have repository context
+        if (!this.isInitialized) {
+            await this.initialize();
+        }
+        this.configureRepositoryContext();
+
         const { staged } = options;
         
         try {
             let context = '## Git Context for Commit Message Generation\n\n';
 
-            // Add diff of changes
+            // Add diff of changes with smart truncation
             try {
                 const diff = await this.getDiffForChanges(options);
                 const changeType = staged ? 'Staged' : 'Unstaged';
-                context += `### Full Diff of ${changeType} Changes\n\`\`\`diff\n${diff}\n\`\`\`\n\n`;
+                
+                if (diff.length > MAX_DIFF_SIZE) {
+                    console.log(`QuickCommit: Diff is too large (${diff.length} chars), creating file summary instead`);
+                    
+                    // Create a summary of changed files instead of full diff
+                    const filesSummary = this.createFilesSummary(changes);
+                    context += `### ${changeType} Changes Summary (Diff truncated due to size)\n\n${filesSummary}\n\n`;
+                } else {
+                    context += `### Full Diff of ${changeType} Changes\n\`\`\`diff\n${diff}\n\`\`\`\n\n`;
+                }
             } catch (error) {
                 const changeType = staged ? 'Staged' : 'Unstaged';
-                context += `### Full Diff of ${changeType} Changes\n\`\`\`diff\n(No diff available)\n\`\`\`\n\n`;
+                console.error('QuickCommit: Error getting diff, falling back to file summary:', error);
+                
+                // Fallback to file summary if diff fails
+                const filesSummary = this.createFilesSummary(changes);
+                context += `### ${changeType} Changes Summary (Diff unavailable)\n\n${filesSummary}\n\n`;
             }
 
             // Add summary
@@ -281,6 +397,84 @@ export class GitService {
             case '?': return 'Untracked';
             default: return 'Unknown';
         }
+    }
+
+    /**
+     * Create a summary of changed files when diff is too large
+     */
+    private createFilesSummary(changes: GitChange[]): string {
+        if (changes.length === 0) {
+            return 'No changes detected.';
+        }
+
+        // Group changes by status
+        const added: string[] = [];
+        const modified: string[] = [];
+        const deleted: string[] = [];
+        const renamed: string[] = [];
+        const other: string[] = [];
+
+        changes.forEach(change => {
+            const relativePath = path.relative(this.workspaceRoot, change.filePath);
+            
+            switch (change.status.toLowerCase()) {
+                case 'added':
+                case 'a':
+                    added.push(relativePath);
+                    break;
+                case 'modified':
+                case 'm':
+                    modified.push(relativePath);
+                    break;
+                case 'deleted':
+                case 'd':
+                    deleted.push(relativePath);
+                    break;
+                case 'renamed':
+                case 'r':
+                    renamed.push(relativePath);
+                    break;
+                default:
+                    other.push(`${relativePath} (${change.status})`);
+                    break;
+            }
+        });
+
+        let summary = '';
+        
+        if (modified.length > 0) {
+            summary += `**Modified Files (${modified.length}):**\n`;
+            modified.forEach(file => summary += `- ${file}\n`);
+            summary += '\n';
+        }
+        
+        if (added.length > 0) {
+            summary += `**Added Files (${added.length}):**\n`;
+            added.forEach(file => summary += `- ${file}\n`);
+            summary += '\n';
+        }
+        
+        if (deleted.length > 0) {
+            summary += `**Deleted Files (${deleted.length}):**\n`;
+            deleted.forEach(file => summary += `- ${file}\n`);
+            summary += '\n';
+        }
+        
+        if (renamed.length > 0) {
+            summary += `**Renamed Files (${renamed.length}):**\n`;
+            renamed.forEach(file => summary += `- ${file}\n`);
+            summary += '\n';
+        }
+        
+        if (other.length > 0) {
+            summary += `**Other Changes (${other.length}):**\n`;
+            other.forEach(file => summary += `- ${file}\n`);
+            summary += '\n';
+        }
+
+        summary += `**Total: ${changes.length} file${changes.length === 1 ? '' : 's'} changed**`;
+        
+        return summary;
     }
 
     dispose(): void {

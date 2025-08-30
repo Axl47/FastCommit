@@ -26,7 +26,7 @@ export class ConfigurationManager {
             apiProvider: provider,
             model,
             temperature: 1, // Fixed low temperature for consistent commit messages
-            maxTokens: 500,   // Reasonable limit for commit messages
+            maxTokens: 30000,   // Increased limit to handle large diffs and complex commit messages
             // API key will be retrieved separately from secrets
         };
     }

@@ -148,25 +148,25 @@ export function getDefaultModelConfig(provider: string): { model: string; temper
             return {
                 model: 'gpt-5-mini',
                 temperature: 1,
-                maxTokens: 500
+                maxTokens: 30000
             };
         case 'anthropic':
             return {
                 model: 'claude-4-sonnet',
                 temperature: 1,
-                maxTokens: 500
+                maxTokens: 30000
             };
         case 'openrouter':
             return {
                 model: 'anthropic/claude-4-sonnet',
                 temperature: 1,
-                maxTokens: 500
+                maxTokens: 30000
             };
         default:
             return {
                 model: 'gpt-5-mini',
                 temperature: 1,
-                maxTokens: 500
+                maxTokens: 30000
             };
     }
 }

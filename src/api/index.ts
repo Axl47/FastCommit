@@ -127,6 +127,10 @@ abstract class BaseApiHandler implements ApiHandler {
  */
 class OpenAIHandler extends BaseApiHandler {
     async completePrompt(prompt: string): Promise<string> {
+        if (!this.config.apiKey) {
+            throw new Error('OpenAI API key is not configured');
+        }
+
         const url = this.config.baseUrl || 'https://api.openai.com/v1/chat/completions';
         const headers = {
             'Authorization': `Bearer ${this.config.apiKey}`
@@ -141,18 +145,35 @@ class OpenAIHandler extends BaseApiHandler {
                 }
             ],
             temperature: this.config.temperature || 1,
-            max_completion_tokens: this.config.maxTokens || 500
+            max_completion_tokens: this.config.maxTokens || 30000
         };
 
-        const response = await this.makeRequest(url, headers, body);
-        return response.choices[0]?.message?.content || '';
+        console.log('QuickCommit: Making OpenAI API request to:', url);
+        console.log('QuickCommit: Request model:', body.model);
+
+        try {
+            const response = await this.makeRequest(url, headers, body);
+            console.log('QuickCommit: Raw OpenAI API response:', JSON.stringify(response, null, 2));
+            
+            const content = response.choices?.[0]?.message?.content;
+            if (!content) {
+                throw new Error(`Invalid OpenAI API response structure: ${JSON.stringify(response)}`);
+            }
+            
+            console.log('QuickCommit: Extracted commit message from OpenAI:', content);
+            return content;
+        } catch (error) {
+            console.error('QuickCommit: OpenAI API error:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            throw new Error(`OpenAI API request failed: ${errorMessage}`);
+        }
     }
 
     getModel(): { id: string; info: ModelInfo } {
         return {
-            id: this.config.model || 'gpt-4',
+            id: this.config.model || 'gpt-5-mini',
             info: {
-                maxTokens: 4000,
+                maxTokens: 30000,
                 contextWindow: 8000,
                 supportsImages: false
             }
@@ -165,9 +186,13 @@ class OpenAIHandler extends BaseApiHandler {
  */
 class AnthropicHandler extends BaseApiHandler {
     async completePrompt(prompt: string): Promise<string> {
+        if (!this.config.apiKey) {
+            throw new Error('Anthropic API key is not configured');
+        }
+
         const url = this.config.baseUrl || 'https://api.anthropic.com/v1/messages';
         const headers = {
-            'x-api-key': this.config.apiKey!,
+            'x-api-key': this.config.apiKey,
             'anthropic-version': '2023-06-01'
         };
 
@@ -179,19 +204,36 @@ class AnthropicHandler extends BaseApiHandler {
                     content: prompt
                 }
             ],
-            max_completion_tokens: this.config.maxTokens || 500,
+            max_completion_tokens: this.config.maxTokens || 30000,
             temperature: this.config.temperature || 1
         };
 
-        const response = await this.makeRequest(url, headers, body);
-        return response.content[0]?.text || '';
+        console.log('QuickCommit: Making Anthropic API request to:', url);
+        console.log('QuickCommit: Request model:', body.model);
+
+        try {
+            const response = await this.makeRequest(url, headers, body);
+            console.log('QuickCommit: Raw Anthropic API response:', JSON.stringify(response, null, 2));
+            
+            const content = response.content?.[0]?.text;
+            if (!content) {
+                throw new Error(`Invalid Anthropic API response structure: ${JSON.stringify(response)}`);
+            }
+            
+            console.log('QuickCommit: Extracted commit message from Anthropic:', content);
+            return content;
+        } catch (error) {
+            console.error('QuickCommit: Anthropic API error:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            throw new Error(`Anthropic API request failed: ${errorMessage}`);
+        }
     }
 
     getModel(): { id: string; info: ModelInfo } {
         return {
             id: this.config.model || 'claude-3-sonnet-20240229',
             info: {
-                maxTokens: 4000,
+                maxTokens: 30000,
                 contextWindow: 200000,
                 supportsImages: false
             }
@@ -204,6 +246,10 @@ class AnthropicHandler extends BaseApiHandler {
  */
 class OpenRouterHandler extends BaseApiHandler {
     async completePrompt(prompt: string): Promise<string> {
+        if (!this.config.apiKey) {
+            throw new Error('OpenRouter API key is not configured');
+        }
+
         const url = this.config.baseUrl || 'https://openrouter.ai/api/v1/chat/completions';
         const headers = {
             'Authorization': `Bearer ${this.config.apiKey}`,
@@ -220,18 +266,35 @@ class OpenRouterHandler extends BaseApiHandler {
                 }
             ],
             temperature: this.config.temperature || 1,
-            max_completion_tokens: this.config.maxTokens || 500
+            max_completion_tokens: this.config.maxTokens || 30000
         };
 
-        const response = await this.makeRequest(url, headers, body);
-        return response.choices[0]?.message?.content || '';
+        console.log('QuickCommit: Making OpenRouter API request to:', url);
+        console.log('QuickCommit: Request model:', body.model);
+
+        try {
+            const response = await this.makeRequest(url, headers, body);
+            console.log('QuickCommit: Raw OpenRouter API response:', JSON.stringify(response, null, 2));
+            
+            const content = response.choices?.[0]?.message?.content;
+            if (!content) {
+                throw new Error(`Invalid OpenRouter API response structure: ${JSON.stringify(response)}`);
+            }
+            
+            console.log('QuickCommit: Extracted commit message from OpenRouter:', content);
+            return content;
+        } catch (error) {
+            console.error('QuickCommit: OpenRouter API error:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            throw new Error(`OpenRouter API request failed: ${errorMessage}`);
+        }
     }
 
     getModel(): { id: string; info: ModelInfo } {
         return {
             id: this.config.model || 'anthropic/claude-3-sonnet',
             info: {
-                maxTokens: 4000,
+                maxTokens: 30000,
                 contextWindow: 200000,
                 supportsImages: false
             }
