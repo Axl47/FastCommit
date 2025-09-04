@@ -124,18 +124,25 @@ Would you like to configure your API key now?`;
  * Handle initial Obsidian setup prompt
  */
 async function handleObsidianInitialSetup(context: vscode.ExtensionContext): Promise<void> {
-    try {
-        // Only prompt after a slight delay to avoid overwhelming user during activation
-        setTimeout(async () => {
+    // Only prompt after a slight delay to avoid overwhelming user during activation
+    setTimeout(async () => {
+        try {
+            console.log('FastCommit: Starting Obsidian initial setup check');
+            if (outputChannel) {
+                outputChannel.appendLine('FastCommit: Checking Obsidian integration setup');
+            }
+            
             await ConfigurationManager.handleObsidianInitialPrompt(context);
-        }, 2000); // 2 second delay
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error('FastCommit: Error in Obsidian initial setup:', error);
-        if (outputChannel) {
-            outputChannel.appendLine(`FastCommit: Obsidian setup error: ${errorMessage}`);
+            
+            console.log('FastCommit: Obsidian initial setup check completed');
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error('FastCommit: Error in Obsidian initial setup:', error);
+            if (outputChannel) {
+                outputChannel.appendLine(`FastCommit: Obsidian setup error: ${errorMessage}`);
+            }
         }
-    }
+    }, 2000); // 2 second delay
 }
 
 /**

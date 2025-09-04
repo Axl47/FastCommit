@@ -71,15 +71,22 @@ export class ObsidianService {
      * Prompt user to enable Obsidian integration
      */
     async promptForEnabling(): Promise<boolean> {
+        console.log('FastCommit: Showing Obsidian enablement prompt to user');
+        
         const selection = await vscode.window.showInformationMessage(
             'FastCommit can integrate with Obsidian to automatically log your commit messages. Would you like to enable this feature?',
             'Yes, Enable', 'No, Don\'t Show Again'
         );
 
+        console.log(`FastCommit: User selected: ${selection}`);
+
         if (selection === 'Yes, Enable') {
+            console.log('FastCommit: Enabling Obsidian integration in workspace settings');
             await vscode.workspace.getConfiguration('fastcommit.obsidian').update('enabled', true, vscode.ConfigurationTarget.Workspace);
+            console.log('FastCommit: Obsidian integration enabled successfully');
             return true;
         } else if (selection === 'No, Don\'t Show Again') {
+            console.log('FastCommit: User declined Obsidian integration, marking as shown');
             // Store user's preference to not ask again
             await this.context.globalState.update('obsidian.promptShown', true);
         }
@@ -102,6 +109,8 @@ export class ObsidianService {
      * Prompt user for complete Obsidian configuration
      */
     async promptForConfiguration(): Promise<boolean> {
+        console.log('FastCommit: Starting Obsidian configuration prompts');
+        
         // First, get the API key
         const apiKey = await vscode.window.showInputBox({
             prompt: 'Enter your Obsidian API Key',
@@ -116,8 +125,11 @@ export class ObsidianService {
         });
 
         if (!apiKey) {
+            console.log('FastCommit: User cancelled API key input');
             return false;
         }
+        
+        console.log('FastCommit: API key provided, continuing with URL prompt');
 
         // Get the base URL
         const url = await vscode.window.showInputBox({
@@ -137,8 +149,11 @@ export class ObsidianService {
         });
 
         if (!url) {
+            console.log('FastCommit: User cancelled URL input');
             return false;
         }
+        
+        console.log('FastCommit: URL provided, continuing with vault name prompt');
 
         // Get vault name
         const vaultName = await vscode.window.showInputBox({
@@ -153,8 +168,11 @@ export class ObsidianService {
         });
 
         if (!vaultName) {
+            console.log('FastCommit: User cancelled vault name input');
             return false;
         }
+        
+        console.log('FastCommit: Vault name provided, continuing with file path prompt');
 
         // Get file path
         const filePath = await vscode.window.showInputBox({
@@ -169,8 +187,11 @@ export class ObsidianService {
         });
 
         if (!filePath) {
+            console.log('FastCommit: User cancelled file path input');
             return false;
         }
+        
+        console.log('FastCommit: File path provided, continuing with block ID prompt');
 
         // Get block ID
         const blockId = await vscode.window.showInputBox({
@@ -185,11 +206,16 @@ export class ObsidianService {
         });
 
         if (!blockId) {
+            console.log('FastCommit: User cancelled block ID input');
             return false;
         }
+        
+        console.log('FastCommit: Block ID provided, all configuration collected');
 
         // Save all configuration
+        console.log('FastCommit: Saving Obsidian configuration to workspace settings');
         const obsidianConfig = vscode.workspace.getConfiguration('fastcommit.obsidian');
+        
         await obsidianConfig.update('enabled', true, vscode.ConfigurationTarget.Workspace);
         await obsidianConfig.update('url', url.trim(), vscode.ConfigurationTarget.Workspace);
         await obsidianConfig.update('vaultName', vaultName.trim(), vscode.ConfigurationTarget.Workspace);
@@ -197,6 +223,7 @@ export class ObsidianService {
         await obsidianConfig.update('blockId', blockId.trim(), vscode.ConfigurationTarget.Workspace);
         await this.setApiKey(apiKey.trim());
 
+        console.log('FastCommit: Obsidian configuration saved successfully');
         vscode.window.showInformationMessage('Obsidian integration configured successfully!');
         return true;
     }

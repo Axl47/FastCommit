@@ -221,13 +221,25 @@ Supported providers:
     static async handleObsidianInitialPrompt(context: vscode.ExtensionContext): Promise<void> {
         const obsidianService = this.getObsidianService(context);
         
+        console.log('FastCommit: Checking if we should prompt for Obsidian enablement');
         if (obsidianService.shouldPromptForEnabling()) {
+            console.log('FastCommit: Prompting user to enable Obsidian integration');
             const enabled = await obsidianService.promptForEnabling();
             
             if (enabled) {
+                console.log('FastCommit: User enabled Obsidian, proceeding with configuration');
                 // If user enabled it, prompt for configuration
-                await obsidianService.promptForConfiguration();
+                const configured = await obsidianService.promptForConfiguration();
+                if (configured) {
+                    console.log('FastCommit: Obsidian configuration completed successfully');
+                } else {
+                    console.log('FastCommit: Obsidian configuration was cancelled or failed');
+                }
+            } else {
+                console.log('FastCommit: User did not enable Obsidian integration');
             }
+        } else {
+            console.log('FastCommit: Should not prompt for Obsidian (already enabled or user declined)');
         }
     }
 }
