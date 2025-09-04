@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 export interface ObsidianConfiguration {
     enabled: boolean;
     url: string;
-    vaultName: string;
     filePath: string;
     blockId: string;
 }
@@ -25,7 +24,6 @@ export class ObsidianService {
         return {
             enabled: config.get<boolean>('enabled', false),
             url: config.get<string>('url', ''),
-            vaultName: config.get<string>('vaultName', ''),
             filePath: config.get<string>('filePath', ''),
             blockId: config.get<string>('blockId', '')
         };
@@ -47,7 +45,6 @@ export class ObsidianService {
         return !!(
             config.enabled &&
             config.url &&
-            config.vaultName &&
             config.filePath &&
             config.blockId
         );
@@ -153,26 +150,7 @@ export class ObsidianService {
             return false;
         }
         
-        console.log('FastCommit: URL provided, continuing with vault name prompt');
-
-        // Get vault name
-        const vaultName = await vscode.window.showInputBox({
-            prompt: 'Enter your Obsidian vault name',
-            placeHolder: 'MyVault',
-            validateInput: (value) => {
-                if (!value || value.trim().length === 0) {
-                    return 'Vault name cannot be empty';
-                }
-                return null;
-            }
-        });
-
-        if (!vaultName) {
-            console.log('FastCommit: User cancelled vault name input');
-            return false;
-        }
-        
-        console.log('FastCommit: Vault name provided, continuing with file path prompt');
+        console.log('FastCommit: URL provided, continuing with file path prompt');
 
         // Get file path
         const filePath = await vscode.window.showInputBox({
@@ -195,7 +173,7 @@ export class ObsidianService {
 
         // Get block ID
         const blockId = await vscode.window.showInputBox({
-            prompt: 'Enter the block ID to prepend commits',
+            prompt: 'Enter the block ID to append commits',
             placeHolder: 'commit-log',
             validateInput: (value) => {
                 if (!value || value.trim().length === 0) {
@@ -218,7 +196,6 @@ export class ObsidianService {
         
         await obsidianConfig.update('enabled', true, vscode.ConfigurationTarget.Workspace);
         await obsidianConfig.update('url', url.trim(), vscode.ConfigurationTarget.Workspace);
-        await obsidianConfig.update('vaultName', vaultName.trim(), vscode.ConfigurationTarget.Workspace);
         await obsidianConfig.update('filePath', filePath.trim(), vscode.ConfigurationTarget.Workspace);
         await obsidianConfig.update('blockId', blockId.trim(), vscode.ConfigurationTarget.Workspace);
         await this.setApiKey(apiKey.trim());
@@ -285,7 +262,7 @@ export class ObsidianService {
             const http = require('http');
             const urlLib = require('url');
             
-            const requestUrl = `${config.url}/${config.vaultName}/${config.filePath}`;
+            const requestUrl = `${config.url}/vault/${config.filePath}`;
             const parsedUrl = urlLib.parse(requestUrl);
             const client = parsedUrl.protocol === 'https:' ? https : http;
             
@@ -298,9 +275,9 @@ export class ObsidianService {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'text/plain',
-                    'Content-Length': Buffer.byteLength(requestBody),
-                    'Operation': 'prepend',
+                    'Content-Type': 'text/markdown',
+                    'Trim-Target-Whitespace': false,
+                    'Operation': 'append',
                     'Target-Type': 'block',
                     'Target': config.blockId
                 }
