@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ApiConfiguration } from '../api';
 import { getDefaultModelConfig } from '../prompts/commit-template';
+import { ObsidianService } from '../services/ObsidianService';
 
 /**
  * Configuration management for FastCommit extension
@@ -165,6 +166,68 @@ Supported providers:
             case 'anthropic': return 'Anthropic';
             case 'openrouter': return 'OpenRouter';
             default: return provider;
+        }
+    }
+
+    /**
+     * Check if Obsidian integration is enabled
+     */
+    static isObsidianEnabled(): boolean {
+        const config = vscode.workspace.getConfiguration('fastcommit.obsidian');
+        return config.get<boolean>('enabled', false);
+    }
+
+    /**
+     * Get Obsidian service instance
+     */
+    static getObsidianService(context: vscode.ExtensionContext): ObsidianService {
+        return new ObsidianService(context);
+    }
+
+    /**
+     * Configure Obsidian integration through prompts
+     */
+    static async configureObsidian(context: vscode.ExtensionContext): Promise<boolean> {
+        const obsidianService = this.getObsidianService(context);
+        
+        if (obsidianService.isConfigured()) {
+            const selection = await vscode.window.showInformationMessage(
+                'Obsidian integration is already configured. Would you like to reconfigure it?',
+                'Reconfigure', 'Test Connection', 'Cancel'
+            );
+
+            if (selection === 'Reconfigure') {
+                return await obsidianService.promptForConfiguration();
+            } else if (selection === 'Test Connection') {
+                try {
+                    await obsidianService.testConnection();
+                    vscode.window.showInformationMessage('Obsidian connection test successful!');
+                    return true;
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    vscode.window.showErrorMessage(`Obsidian connection test failed: ${errorMessage}`);
+                    return false;
+                }
+            }
+            return false;
+        } else {
+            return await obsidianService.promptForConfiguration();
+        }
+    }
+
+    /**
+     * Handle initial Obsidian setup prompt
+     */
+    static async handleObsidianInitialPrompt(context: vscode.ExtensionContext): Promise<void> {
+        const obsidianService = this.getObsidianService(context);
+        
+        if (obsidianService.shouldPromptForEnabling()) {
+            const enabled = await obsidianService.promptForEnabling();
+            
+            if (enabled) {
+                // If user enabled it, prompt for configuration
+                await obsidianService.promptForConfiguration();
+            }
         }
     }
 }

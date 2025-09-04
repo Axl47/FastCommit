@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { CommitMessageProvider } from './providers/CommitMessageProvider';
+import { ConfigurationManager } from './config/settings';
 
 let commitMessageProvider: CommitMessageProvider | undefined;
 let outputChannel: vscode.OutputChannel | undefined;
@@ -32,6 +33,9 @@ export async function activate(context: vscode.ExtensionContext) {
             showWelcomeMessage(context);
             await context.globalState.update('fastcommit.hasShownWelcome', true);
         }
+
+        // Handle Obsidian initial setup prompt
+        await handleObsidianInitialSetup(context);
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -114,6 +118,24 @@ Would you like to configure your API key now?`;
                 vscode.commands.executeCommand('fastcommit.configureApiKey');
             }
         });
+}
+
+/**
+ * Handle initial Obsidian setup prompt
+ */
+async function handleObsidianInitialSetup(context: vscode.ExtensionContext): Promise<void> {
+    try {
+        // Only prompt after a slight delay to avoid overwhelming user during activation
+        setTimeout(async () => {
+            await ConfigurationManager.handleObsidianInitialPrompt(context);
+        }, 2000); // 2 second delay
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('FastCommit: Error in Obsidian initial setup:', error);
+        if (outputChannel) {
+            outputChannel.appendLine(`FastCommit: Obsidian setup error: ${errorMessage}`);
+        }
+    }
 }
 
 /**

@@ -36,6 +36,11 @@
         "command": "fastcommit.configureApiKey",
         "title": "Configure API Key",
         "category": "FastCommit"
+      },
+      {
+        "command": "fastcommit.configureObsidian",
+        "title": "Configure Obsidian Integration",
+        "category": "FastCommit"
       }
     ],
     "menus": {
@@ -53,6 +58,9 @@
         },
         {
           "command": "fastcommit.configureApiKey"
+        },
+        {
+          "command": "fastcommit.configureObsidian"
         }
       ]
     },
@@ -89,6 +97,31 @@
           "type": "boolean",
           "default": true,
           "description": "Exclude package manager lock files from commit message analysis"
+        },
+        "fastcommit.obsidian.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Obsidian integration to automatically log commit messages"
+        },
+        "fastcommit.obsidian.url": {
+          "type": "string",
+          "default": "",
+          "description": "Base URL for Obsidian API (e.g., http://localhost:27123)"
+        },
+        "fastcommit.obsidian.vaultName": {
+          "type": "string",
+          "default": "",
+          "description": "Name of the Obsidian vault"
+        },
+        "fastcommit.obsidian.filePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the file within the vault (e.g., Projects/commits.md)"
+        },
+        "fastcommit.obsidian.blockId": {
+          "type": "string",
+          "default": "",
+          "description": "Block ID within the file to prepend commit messages"
         }
       }
     }

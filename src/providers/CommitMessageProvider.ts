@@ -47,8 +47,15 @@ export class CommitMessageProvider {
             () => this.configureApiKey()
         );
 
+        // Register Obsidian configuration command
+        const obsidianConfigCommand = vscode.commands.registerCommand(
+            'fastcommit.configureObsidian',
+            () => this.configureObsidian()
+        );
+
         this.context.subscriptions.push(generateCommand);
         this.context.subscriptions.push(configCommand);
+        this.context.subscriptions.push(obsidianConfigCommand);
         this.context.subscriptions.push(this.gitService);
     }
 
@@ -126,6 +133,9 @@ export class CommitMessageProvider {
                     this.gitService.setCommitMessage(commitMessage);
                     this.outputChannel.appendLine(`Generated commit message: ${commitMessage}`);
                     
+                    // Send to Obsidian if enabled
+                    await this.sendToObsidianIfEnabled(commitMessage);
+                    
                 } catch (error) {
                     console.error('FastCommit: Error in generateCommitMessage:', error);
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -171,6 +181,62 @@ export class CommitMessageProvider {
             } else {
                 vscode.window.showErrorMessage(`Configuration validation failed: ${validation.error}`);
             }
+        }
+    }
+
+    /**
+     * Configure Obsidian integration
+     */
+    async configureObsidian(): Promise<void> {
+        try {
+            const success = await ConfigurationManager.configureObsidian(this.context);
+            if (success) {
+                this.outputChannel.appendLine('Obsidian integration configured successfully');
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            vscode.window.showErrorMessage(`Failed to configure Obsidian: ${errorMessage}`);
+            this.outputChannel.appendLine(`Obsidian configuration error: ${errorMessage}`);
+        }
+    }
+
+    /**
+     * Send commit message to Obsidian if integration is enabled
+     */
+    private async sendToObsidianIfEnabled(commitMessage: string): Promise<void> {
+        try {
+            if (ConfigurationManager.isObsidianEnabled()) {
+                const obsidianService = ConfigurationManager.getObsidianService(this.context);
+                
+                if (!obsidianService.isConfigured()) {
+                    // If enabled but not configured, prompt for configuration
+                    const shouldConfigure = await vscode.window.showInformationMessage(
+                        'Obsidian integration is enabled but not configured. Would you like to configure it now?',
+                        'Configure', 'Later'
+                    );
+                    
+                    if (shouldConfigure === 'Configure') {
+                        await obsidianService.promptForConfiguration();
+                        // Try sending again if configuration was successful
+                        if (obsidianService.isConfigured()) {
+                            await obsidianService.sendCommitMessage(commitMessage);
+                        }
+                    }
+                } else {
+                    // Send the commit message to Obsidian
+                    const success = await obsidianService.sendCommitMessage(commitMessage);
+                    if (success) {
+                        this.outputChannel.appendLine('Commit message sent to Obsidian successfully');
+                    } else {
+                        this.outputChannel.appendLine('Failed to send commit message to Obsidian');
+                    }
+                }
+            }
+        } catch (error) {
+            // Log error but don't interrupt the main commit workflow
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.outputChannel.appendLine(`Obsidian integration error: ${errorMessage}`);
+            console.error('FastCommit: Obsidian integration error:', error);
         }
     }
 
