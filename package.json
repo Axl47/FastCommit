@@ -1,7 +1,7 @@
 {
   "name": "fastcommit",
   "displayName": "FastCommit",
-  "description": "AI-powered commit message generator for VS Code",
+  "description": "AI-powered commit message generator for VS Code with optional Obsidian integration",
   "version": "1.1.1",
   "publisher": "axorai",
   "license": "MIT",
@@ -16,7 +16,10 @@
     "commit",
     "ai",
     "conventional-commits",
-    "commit-message"
+    "commit-message",
+    "obsidian",
+    "project-tracking",
+    "automation"
   ],
   "main": "./out/extension.js",
   "repository": {

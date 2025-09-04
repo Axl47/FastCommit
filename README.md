@@ -1,6 +1,6 @@
 # FastCommit
 
-AI-powered commit message generator for VS Code that creates conventional commit messages based on your staged changes.
+AI-powered commit message generator for VS Code that creates conventional commit messages based on your staged changes, with optional Obsidian integration for project tracking.
 
 ## Features
 
@@ -10,6 +10,7 @@ AI-powered commit message generator for VS Code that creates conventional commit
 - ⚡ **Quick & Easy**: One-click commit message generation from the Source Control panel
 - 🔧 **Configurable**: Customize templates, exclude patterns, and provider settings
 - 🔒 **Secure**: API keys stored securely in VS Code's secret storage
+- 📓 **Obsidian Integration**: Automatically log commit messages to your Obsidian vault
 
 ## Quick Start
 
@@ -22,6 +23,9 @@ AI-powered commit message generator for VS Code that creates conventional commit
    - Stage your changes in Git
    - Click the FastCommit button in the Source Control panel
    - Or run `FastCommit: Generate Commit Message` from Command Palette
+4. **Optional: Configure Obsidian Integration**:
+   - Run `FastCommit: Configure Obsidian Integration` from Command Palette
+   - Enter your Obsidian API details to automatically log commits to your vault
 
 ## Supported AI Providers
 
@@ -49,6 +53,26 @@ Open VS Code Settings (`Ctrl+,` / `Cmd+,`) and search for "FastCommit":
 - **Custom Template**: Override the default conventional commit template
 - **Include Unstaged**: Generate messages from unstaged changes if no staged changes exist
 - **Exclude Lock Files**: Skip package manager lock files from analysis
+
+### Obsidian Integration
+
+Connect FastCommit to your Obsidian vault to automatically log commit messages:
+
+- **Enable Integration**: Toggle Obsidian integration on/off
+- **API URL**: Your Obsidian API endpoint (e.g., `http://localhost:27123`)
+- **Vault Name**: Name of your Obsidian vault
+- **File Path**: Path to the target file (e.g., `Projects/commits.md`)
+- **Block ID**: Block identifier to prepend commit messages to
+
+Configure via Command Palette:
+```bash
+FastCommit: Configure Obsidian Integration
+```
+
+The integration will automatically prepend commit messages to your specified block in the format:
+```markdown
+- feat(auth): add OAuth2 login integration
+```
 
 ### API Keys
 
@@ -85,6 +109,7 @@ README.md
 3. **AI Processing**: Sends context to your chosen AI provider
 4. **Formats Output**: Ensures the response follows conventional commit standards
 5. **Sets Message**: Automatically populates the Git commit message field
+6. **Logs to Obsidian** (Optional): Sends commit message to your Obsidian vault
 
 ## Conventional Commit Format
 
@@ -139,10 +164,17 @@ refactor(utils): extract common validation logic
 - Enable VS Code's built-in Git extension
 - Restart VS Code if Git extension was recently installed
 
+### Obsidian Integration Issues
+- Verify Obsidian is running with API enabled
+- Check that your API URL and vault name are correct
+- Ensure the target file and block ID exist in your vault
+- Confirm your Obsidian API key has proper permissions
+
 ## Privacy & Security
 
 - API keys are stored locally in VS Code's encrypted secret storage
 - Code diffs are sent to your chosen AI provider for analysis
+- Obsidian API keys are stored securely and only used for your configured vault
 - No data is stored or logged by the FastCommit extension
 - All communication uses HTTPS encryption
 
@@ -159,6 +191,11 @@ FastCommit is open source! Contributions welcome:
 MIT License - see LICENSE file for details.
 
 ## Changelog
+
+### 1.1.1
+- Added Obsidian integration for automatic commit logging
+- Enhanced error handling and debugging
+- Improved configuration workflow
 
 ### 1.0.0
 - Initial release
